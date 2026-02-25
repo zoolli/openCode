@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>學生成績登入系統 - 展示模組</title>
+    <link rel="stylesheet" href="../common/style.css">
+    <style>
+        .system-layout {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 2rem;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-panel,
+        .list-panel {
+            background-color: var(--card-bg);
+            padding: 1.8rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-panel h2,
+        .list-panel h2 {
+            margin-bottom: 1.5rem;
+            color: var(--text-color);
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-panel h2::before {
+            content: "📋";
+        }
+
+        .list-panel h2::before {
+            content: "📊";
+        }
+
+        @media (max-width: 768px) {
+            .system-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .status-pass {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--success-color);
+            padding: 0.3rem 0.6rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .status-fail {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--danger-color);
+            padding: 0.3rem 0.6rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .btn-delete {
+            background-color: transparent;
+            color: var(--danger-color);
+            border: 1px solid var(--danger-color);
+            padding: 0.4rem 0.8rem;
+            font-size: 0.85rem;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .btn-delete:hover {
+            background-color: var(--danger-color);
+            color: white;
+            transform: scale(1.05);
+        }
+
+        /* 空狀態樣式 */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--text-muted);
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        tbody tr {
+            transition: background-color 0.2s;
+        }
+
+        tbody tr:hover {
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="app-header">
+            <a href="../index.html" class="back-btn">← 返回專案總覽</a>
+            <h1 class="app-title">展示三：學生成績登入系統</h1>
+        </div>
+
+        <main class="system-layout">
+            <!-- 登入表單 -->
+            <div class="form-panel">
+                <h2>新增成績登入</h2>
+                <form id="grade-form">
+                    <div class="form-group">
+                        <label for="student-name">學生姓名</label>
+                        <input type="text" id="student-name" required placeholder="例如：王小明" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label for="student-score">學科成績 (0-100)</label>
+                        <input type="number" id="student-score" required min="0" max="100" placeholder="例如：85">
+                    </div>
+                    <button type="submit" style="width: 100%; margin-top: 0.5rem;">新增記錄</button>
+                </form>
+            </div>
+
+            <!-- 成績列表 -->
+            <div class="list-panel">
+                <h2>成績清單總覽</h2>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th width="35%">姓名</th>
+                                <th width="20%">成績</th>
+                                <th width="25%">狀態</th>
+                                <th width="20%">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="grade-list">
+                            <!-- 由 JavaScript 動態產生 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const form = document.getElementById('grade-form');
+        const list = document.getElementById('grade-list');
+        // 初始化一些預設資料讓展示更好看
+        let records = [
+            { id: 1, name: '林大華', score: 92 },
+            { id: 2, name: '陳美麗', score: 45 }
+        ];
+
+        // 監聽表單提交
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            const name = document.getElementById('student-name').value.trim();
+            const scoreInput = document.getElementById('student-score').value;
+            const score = parseInt(scoreInput);
+
+            if (name && !isNaN(score) && score >= 0 && score <= 100) {
+                // 新增至陣列開頭
+                records.unshift({ id: Date.now(), name, score });
+                renderList();
+
+                // 重設表單與聚焦焦點
+                form.reset();
+                document.getElementById('student-name').focus();
+            }
+        });
+
+        // 刪除記錄功能
+        function deleteRecord(id) {
+            records = records.filter(record => record.id !== id);
+            renderList();
+        }
+
+        // 渲染清單到畫面上
+        function renderList() {
+            list.innerHTML = '';
+
+            if (records.length === 0) {
+                list.innerHTML = `
+                    <tr>
+                        <td colspan="4">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">📝</div>
+                                <p>目前尚無任何成績記錄，請從左側表單新增。</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            records.forEach(record => {
+                const statusHtml = record.score >= 60
+                    ? '<span class="status-pass">及格</span>'
+                    : '<span class="status-fail">不及格</span>';
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${record.name}</strong></td>
+                    <td style="font-family: monospace; font-size: 1.1rem;">${record.score}</td>
+                    <td>${statusHtml}</td>
+                    <td>
+                        <button class="btn-delete" onclick="deleteRecord(${record.id})">刪除</button>
+                    </td>
+                `;
+                list.appendChild(tr);
+            });
+        }
+
+        // 初始載入渲染
+        renderList();
+    </script>
+    <script src="../common/script.js"></script>
+</body>
+
+</html>

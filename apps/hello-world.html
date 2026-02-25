@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hollow World - 展示模組</title>
+    <link rel="stylesheet" href="../common/style.css">
+    <style>
+        .hello-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 60vh;
+        }
+
+        .hello-text {
+            font-size: 5rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0px 10px 30px rgba(79, 172, 254, 0.3);
+            animation: pulse-glow 2.5s infinite ease-in-out;
+            text-align: center;
+        }
+
+        @keyframes pulse-glow {
+            0% {
+                transform: scale(0.98);
+                text-shadow: 0px 5px 20px rgba(79, 172, 254, 0.2);
+            }
+
+            50% {
+                transform: scale(1.02);
+                text-shadow: 0px 20px 40px rgba(79, 172, 254, 0.6);
+            }
+
+            100% {
+                transform: scale(0.98);
+                text-shadow: 0px 5px 20px rgba(79, 172, 254, 0.2);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="app-header">
+            <a href="../index.html" class="back-btn">← 返回專案總覽</a>
+            <h1 class="app-title">展示一：Hollow World</h1>
+        </div>
+
+        <main class="hello-container">
+            <h2 class="hello-text">Hollow World!</h2>
+        </main>
+    </div>
+
+    <script src="../common/script.js"></script>
+</body>
+
+</html>

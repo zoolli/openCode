@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 財經新聞 Agent - 展示模組</title>
+    <link rel="stylesheet" href="../common/style.css">
+    <style>
+        .agent-container {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        .agent-header {
+            background-color: var(--card-bg);
+            padding: 2rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .agent-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: inline-block;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+
+            100% {
+                transform: translateY(0px);
+            }
+        }
+
+        .generate-btn {
+            background: linear-gradient(135deg, #a855f7, #6366f1);
+            color: white;
+            font-size: 1.1rem;
+            padding: 1rem 2rem;
+            border-radius: 30px;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .generate-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 20px rgba(99, 102, 241, 0.4);
+        }
+
+        .generate-btn:disabled {
+            background: #475569;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .news-output {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .news-item {
+            background-color: var(--card-bg);
+            border-left: 4px solid #a855f7;
+            padding: 1.5rem;
+            border-radius: 8px;
+            opacity: 0;
+            transform: translateX(-20px);
+            transition: all 0.5s ease-out;
+        }
+
+        .news-item.visible {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .news-time {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .news-time::before {
+            content: "🕒";
+        }
+
+        .news-content {
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            display: none;
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .thinking-text {
+            display: none;
+            color: #a855f7;
+            font-style: italic;
+            margin-top: 1rem;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 0.5;
+            }
+
+            50% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0.5;
+            }
+        }
+
+        .news-link {
+            display: inline-block;
+            margin-top: 0.8rem;
+            color: #38bdf8;
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: color 0.2s;
+            font-weight: 500;
+        }
+
+        .news-link:hover {
+            color: #7dd3fc;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="app-header">
+            <a href="../index.html" class="back-btn">← 返回專案總覽</a>
+            <h1 class="app-title">展示四：AI 財經新聞 Agent</h1>
+        </div>
+
+        <main class="agent-container">
+            <div class="agent-header">
+                <div class="agent-icon">🤖</div>
+                <h2 style="margin-bottom: 1rem;">智慧財經助理</h2>
+                <p style="color: var(--text-muted); margin-bottom: 2rem;">點擊下方按鈕，AI Agent 將為您即時生成最新的 5 則全球財經重點新聞。</p>
+                <button class="generate-btn" id="generate-btn">
+                    <span>開始生成最新財經新聞</span>
+                    <div class="spinner" id="spinner"></div>
+                </button>
+                <div class="thinking-text" id="thinking-text">AI 正在搜集並整理全球經濟與市場動態...</div>
+            </div>
+
+            <div class="news-output" id="news-output">
+                <!-- 由 AI Agent 動態生成的新聞將顯示於此 -->
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const newsData = [
+            {
+                text: "全球經濟預計在 2026 年將保持韌性，延續擴張力道，人工智慧 (AI) 技術的投資熱潮以及各國財政和貨幣政策的支持是主要的驅動力。",
+                url: "https://ctee.com.tw/"
+            },
+            {
+                text: "中美科技角力升溫，輝達 (Nvidia) 與超微 (AMD) 的 AI 算力晶片競爭白熱化，預計 3 月 GTC 大會將發布新一代 AI 晶片引發市場高度關注。",
+                url: "https://cnyes.com/"
+            },
+            {
+                text: "國泰金控最新調查顯示，台灣民眾風險偏好指數創下歷史新高，超過半數民眾認為台美關稅協定對台灣 GDP 有正面助益，特別是半導體產業。",
+                url: "https://chinatimes.com/"
+            },
+            {
+                text: "中國人民銀行今進行 6000 億元人民幣 MLF 操作，連續第 12 個月加量續作；A 股市場風險偏好回升，全市場成交額重返 2 萬億元大關。",
+                url: "https://eastmoney.com/"
+            },
+            {
+                text: "OpenAI 計畫以高達 8300 億美元的估值，融資超過 1000 億美元，執行長預期「超級智能 (Superintelligence)」將在未來幾年內實現，進一步推升科技股估值。",
+                url: "https://toutiao.com/"
+            }
+        ];
+
+        const generateBtn = document.getElementById('generate-btn');
+        const spinner = document.getElementById('spinner');
+        const btnText = generateBtn.querySelector('span');
+        const thinkingText = document.getElementById('thinking-text');
+        const newsOutput = document.getElementById('news-output');
+
+        generateBtn.addEventListener('click', () => {
+            // UI State: Loading
+            generateBtn.disabled = true;
+            btnText.textContent = '生成中...';
+            spinner.style.display = 'block';
+            thinkingText.style.display = 'block';
+            newsOutput.innerHTML = '';
+
+            // 模擬 AI 思考延遲 (1.5秒)
+            setTimeout(() => {
+                thinkingText.style.display = 'none';
+                btnText.textContent = '重新生成最新財經新聞';
+                spinner.style.display = 'none';
+                generateBtn.disabled = false;
+
+                // 逐條顯示新聞 (帶有打字機/淡入效果)
+                newsData.forEach((news, index) => {
+                    setTimeout(() => {
+                        const now = new Date();
+                        const timeString = `${now.getFullYear()}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getDate().toString().padStart(2, '0')} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+
+                        const item = document.createElement('div');
+                        item.className = 'news-item';
+                        item.innerHTML = `
+                            <div class="news-time">${timeString} (AI 即時生成)</div>
+                            <div class="news-content">
+                                <div>${news.text}</div>
+                                <a href="${news.url}" target="_blank" class="news-link">📍 閱讀原文連結</a>
+                            </div>
+                        `;
+                        newsOutput.appendChild(item);
+
+                        // 觸發 CSS 動畫
+                        setTimeout(() => item.classList.add('visible'), 50);
+                    }, index * 800); // 每 0.8 秒顯示一則
+                });
+            }, 1500);
+        });
+    </script>
+    <script src="../common/script.js"></script>
+</body>
+
+</html>
